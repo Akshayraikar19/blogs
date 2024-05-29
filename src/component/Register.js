@@ -11,7 +11,7 @@ export default function Register({registerIn}){
         email:'',
         password:'',
         bio:'',
-        profilepicture:'',
+
         serverErrors:null,
         clientErrors:{}
     })
@@ -39,9 +39,7 @@ export default function Register({registerIn}){
             errors.bio = 'role is required'
         }
 
-        if(form.profilepicture.trim().length === 0) {
-            errors.profilePic = 'role is required'
-        }
+      
     }
 
     const handleChange=(e)=>{
@@ -135,16 +133,7 @@ export default function Register({registerIn}){
                 />
                 { form.clientErrors.bio && <span> { form.clientErrors.bio } </span>}
                  <br />
-                 <label htmlFor="profilepicture">Enter profilePic</label><br />
-                <input 
-                    type="text" 
-                    value={form.profilepicture} 
-                    onChange={handleChange}
-                    name="profilepicture" 
-                    id="profilepicture"
-                />
-                { form.clientErrors.profilepicture && <span> { form.clientErrors.profilepicture } </span>}
-                 <br />
+              
                 <input type="submit" /> 
             </form>
             { form.serverErrors && displayErrors() } 

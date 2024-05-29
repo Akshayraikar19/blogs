@@ -5,9 +5,9 @@ import Register from './component/Register';
 import Login from './component/Login';
 import Home from "./component/Home"
 import Account from './component/Account';
-import AddBlog from './component/AddBlog';
-import AllBlogs from './component/AllBlogs';
+import ListBlogs from './component/ListBlogs';
 import SingleBlog from './component/singleBlog';
+import CreateBlog from './component/CreateBlog';
 import MyBlogs from './component/MyBlogs';
 import {useAuth}from "./context/AuthContext"
 import axios from "./config/axios"
@@ -51,7 +51,8 @@ function App() {
     <div>
       <h1>BLOG-APP</h1>
       <Link to="/">Home</Link>|
-      <Link to="/all-blogs">All Blogs</Link> | 
+      <Link to="/list-blogs">List Blogs</Link>|
+      {/* //<Link to="/post-form">Post Form</Link> */}
       {!user.isLoggedIn ?(
       <>
       
@@ -60,8 +61,9 @@ function App() {
       </>) :(
       <>
        <Link to="/account">Account</Link>|
-       <Link to= "/add-blog">Add Blog</Link> |
-       <Link to= "/my-blog">My Blogs</Link>
+        <Link to= "/add-blog">Create Blog</Link> |
+        <Link to= "/my-blogs">My Blogs</Link>  |
+
         <Link to="/" onClick={()=>{
              localStorage.removeItem("token")
              dispatch({type:"LOGOUT"})
@@ -72,31 +74,35 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Home/>}  />
-          <Route path="/all-blogs" element={<AllBlogs/>} />
-          <Route path="/single-blog/:id" element={<SingleBlog />} />
+
+               <Route path="/list-blogs" element={<ListBlogs/>} />
+               <Route path="/single-blog/:id" element={<SingleBlog/>} />
+            
+
 
           <Route path="/register" element={<Register   registerIn={registerIn} />}/>
-          <Route path="/login" element={<Login  loggedIn={loggedIn}/>}/>
+           <Route path="/login" element={<Login  loggedIn={loggedIn}/>}/>
         
-          <Route path="/account" element={
+           <Route path="/account" element={
             <PrivateRoute>
               <Account/>
             </PrivateRoute>
           }  />
-          <Route path="/add-blog" element= {
+           <Route path="/add-blog" element= {
             <PrivateRoute>
-              <AddBlog/>
+              <CreateBlog/>
             </PrivateRoute>
           } />
-          <Route path="/my-blog" element= {
+          <Route path="/my-blogs" element= {
             <PrivateRoute>
               <MyBlogs/>
             </PrivateRoute>
-          } />
+          } />  
         
           
         </Routes>
-      <ToastContainer/>
+
+      <ToastContainer position='top-center' />
     </div>
      
      
@@ -104,3 +110,4 @@ function App() {
 }
 
 export default App;
+

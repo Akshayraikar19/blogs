@@ -12,7 +12,7 @@ const loginValidationSchema=yup.object({
 })
 
 export default function Login ({loggedIn}){
-    const {dispatch,user}=useAuth()
+    const {dispatch}=useAuth()
     const navigate=useNavigate()
     const [serverErrors,setServerErrors]=useState('')
 
@@ -61,7 +61,7 @@ export default function Login ({loggedIn}){
                 <br/>
 
                 <label>Enter Password</label>
-                <input type="text"
+                <input type="password"
                 value={formik.values.password}
                 name="password"
                 onChange={formik.handleChange}/>

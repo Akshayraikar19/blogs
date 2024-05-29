@@ -1,169 +1,139 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "../config/axios";
-import { useNavigate } from "react-router-dom";
-export default function MyBlogs(){
-    const [myBlogs,setMyBlogs]=useState([])
-    const [title,setTitle]=useState('')
-    const [content,setContent]=useState('')
-    const [img,setImg]=useState('')
-    const [serverErrors,setServerErrors]=useState(null)
-    const [clientErrors,setClientErrors]=useState({})
-    const [edit,setEdit]=useState(false)
-    const [id,setId]=useState(null)
-    const navigate=useNavigate()
+import { Link } from "react-router-dom";
 
-    useEffect(()=>{
-        const fun=async()=>{
-       try {
-            const response=await axios.get('/api/posts/myPosts',{
-            headers:{
-                Authorization:localStorage.getItem('token')
-            }
-        })
-        console.log(response.data)
-        setMyBlogs(response.data)
-    }catch(err){
-        console.log(err)
-       setServerErrors(err.response.data.errors)
-    }
- }
- fun()
-},[])
+export default function MyBlogs() {
+    const [myblogs, setMyBlogs] = useState([]);
+    const [selectedBlog, setSelectedBlog] = useState(null);
+    const [comments, setComments] = useState([]);
+    const [editBlogId, setEditBlogId] = useState(null);
+    const [editBlogText, setEditBlogText] = useState("");
+    const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+    const [blogToDeleteId, setBlogToDeleteId] = useState(null);
 
-const errors={}
-
-    const runValidations = () => {
-        
-        if(title.trim().length === 0) {
-            errors.title = 'title is required'
-        }
-
-        if(content.trim().length === 0) {
-            errors.content = 'content is required'
-        }
-
-        if(img.trim().length === 0) {
-            errors.img = 'img is required'
-        }
-    }
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        const formData = {
-            title:title,
-            content:content,
-            img:img
-        }
-        
-        runValidations()
-
-        if(Object.keys(errors).length === 0) {
-            try {
-                const response = await axios.put(`/api/posts/${id}`, formData,
-                {
-                    headers:{
-                        Authorization:localStorage.getItem('token')
-                    }
+    useEffect(() => {
+        const fetchBlogs = async () => {
+            const response = await axios.get("/api/posts/myposts", {
+                headers: {
+                    Authorization: localStorage.getItem("token")
                 }
-                ) 
-                const newArr=myBlogs.map(ele=>{
-                    if(ele._id==id){
-                        return response.data
-                    }else{
-                        return ele
-                    }
-                })
-                setMyBlogs(newArr)
-            } catch(err) {
-                console.log(err.response.data)
-                setServerErrors(err.response.data)
-            }
-        } else {
-            setClientErrors(errors)
+            });
+            setMyBlogs(response.data);
+        };
+        fetchBlogs();
+    }, []);
+
+    const handleEditBlogSubmit = async () => {
+        try {
+            const response = await axios.put(
+                `/api/posts/${editBlogId}`,
+                { content: editBlogText },
+                { headers: { Authorization: localStorage.getItem("token") } }
+            );
+            const updatedBlog = response.data;
+            setMyBlogs(myblogs.map(blog => blog._id === updatedBlog._id ? updatedBlog : blog));
+            setEditBlogId(null);
+            setEditBlogText("");
+        } catch (err) {
+            console.error(err);
         }
-    }
+    };
 
-const handleRemove=async(id)=>{
-   try{ const response=await axios.delete(`/api/posts/${id}`,{
-        headers:{
-            Authorization:localStorage.getItem('token')
+    const handleDeleteConfirmationOpen = (blogId) => {
+        setBlogToDeleteId(blogId);
+        setDeleteConfirmationOpen(true);
+    };
+
+    const handleDeleteConfirmationClose = () => {
+        setDeleteConfirmationOpen(false);
+        setBlogToDeleteId(null);
+    };
+
+    const handleDeleteBlog = async () => {
+        try {
+            await axios.delete(`/api/posts/${blogToDeleteId}`, {
+                headers: { Authorization: localStorage.getItem("token") }
+            });
+            setMyBlogs(myblogs.filter(blog => blog._id !== blogToDeleteId));
+            handleDeleteConfirmationClose();
+        } catch (err) {
+            console.error(err);
         }
-    })
+    };
 
-    const newArr=myBlogs.filter(ele=>{
-        return ele._id!=id
-    })
-    setMyBlogs(newArr)
+    const fetchComments = async (blogId) => {
+        try {
+            const response = await axios.get(`/api/posts/${blogId}/comments`);
+            setComments(response.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
-  }catch(err){
-    console.log(err)
-  }
-}
-
-const handleToggle=(id)=>{
-    setEdit(!edit)
-    console.log(id)
-    setId(id)
-}
-
-
+    const handleBlogClick = async (blog) => {
+        setSelectedBlog(blog);
+        fetchComments(blog._id);
+    };
 
     return (
-    <div>
-        <h1>MyBlogs</h1>
-        {
-            myBlogs && 
-            myBlogs.map((ele,i)=>{
-                return (<>
-                <h4 key={ele._id}> Title : {ele.title}</h4>
-                <p > Content : {ele.content}</p>
-                <button onClick={(e)=>{handleToggle(ele._id)}}>{ edit ? 'Cancel' : 'Update' }</button>
-                <button onClick={(e)=>{handleRemove(ele._id)}}>Delete</button>
-               <button onClick={() =>{navigate(`/single-blog/${ele._id}`)}}>View</button>
-                </>
-            )
-            })
-        }
-        {
-                edit &&  <form onSubmit={handleSubmit}>
-                <label htmlFor="title">Enter title</label><br />
-                    <input 
-                        type="text" 
-                        value={title} 
-                        onChange={e=>{setTitle(e.target.value)}} 
-                        id="title"
-                    /> 
-                    { clientErrors.title && <span> { clientErrors.title }</span>}
-            
-                    <br />
-    
-                    <label htmlFor="content">Enter content</label><br />
-                    <input 
-                        type="textarea" 
-                        value={content} 
-                        onChange={e=>{setContent(e.target.value)}} 
-                        id="content"
-                        disabled={!edit}
-                    /> 
-                    { clientErrors.content && <span> { clientErrors.content }</span>}
-            
-                    <br />
-                    <label htmlFor="img">Enter img</label><br />
-                    <input 
-                        type="img" 
-                        value={img} 
-                        onChange={e=>{setImg(e.target.value)}} 
-                        id="img"
-                        disabled={!edit}
-                    /> 
-                    { clientErrors.img && <span> { clientErrors.img }</span>}                   
-                    <br />
-                    <input type="submit"/>
-                </form>
-            }
-        <ul>
-            { serverErrors && serverErrors.map((ele, i) => {
-                return <li key={i}> { ele.msg } </li>
-            })}
-        </ul>
-    </div>)
+        <div>
+            <h1>My Blogs</h1>
+            {myblogs.length !== 0 ? (
+                <ul>
+                    {myblogs.map((blog) => (
+                        <li key={blog._id}>
+                            <Link onClick={() => handleBlogClick(blog)}>{blog.title}</Link>
+                            {selectedBlog && selectedBlog._id === blog._id && (
+                                <div>
+                                    <h2>Title: {selectedBlog.title}</h2>
+                                    <p>Content: {selectedBlog.content}</p>
+                                     
+
+                                    {editBlogId === blog._id ? (
+                                        <form onSubmit={(e) => { e.preventDefault(); handleEditBlogSubmit(); }}>
+                                            <textarea
+                                                value={editBlogText}
+                                                onChange={(e) => setEditBlogText(e.target.value)}
+                                                placeholder="Edit your blog"
+                                            ></textarea><br />
+                                            <button type='submit'>Submit</button>
+                                        </form>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => { setEditBlogId(blog._id); setEditBlogText(blog.content); }}>
+                                                Edit
+                                            </button>
+                                            <button onClick={() => handleDeleteConfirmationOpen(blog._id)}>Delete</button>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p>No blogs found. Create your blog.</p>
+            )}
+
+            {deleteConfirmationOpen && (
+                <div>
+                    <p>Are you sure you want to delete this blog?</p>
+                    <button onClick={handleDeleteBlog}>Delete</button>
+                    <button onClick={handleDeleteConfirmationClose}>Cancel</button>
+                </div>
+            )}
+
+
+                                    <h3>Comments</h3>
+                                    <ul>
+                                        {comments.length !== 0 ? comments.map(comment => (
+                                            <li key={comment._id}>{comment.content} - commented by - {comment?.author?.username}</li>
+                                        )) : (
+                                            <p>No comments yet</p>
+                                        )}
+                                    </ul>
+                                   
+        </div>
+    );
 }
