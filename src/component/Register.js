@@ -11,10 +11,10 @@ export default function Register({registerIn}){
         email:'',
         password:'',
         bio:'',
-
         serverErrors:null,
         clientErrors:{}
     })
+    
     const errors = {}
 
     const runValidations = () => {

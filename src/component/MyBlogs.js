@@ -123,8 +123,6 @@ export default function MyBlogs() {
                     <button onClick={handleDeleteConfirmationClose}>Cancel</button>
                 </div>
             )}
-
-
                                     <h3>Comments</h3>
                                     <ul>
                                         {comments.length !== 0 ? comments.map(comment => (

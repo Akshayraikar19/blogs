@@ -12,19 +12,46 @@ export default function SingleBlog() {
     const [editCommentText, setEditCommentText] = useState("");
     const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
     const [commentToDeleteId, setCommentToDeleteId] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    const fetchPost = async () => {
+        try {
+            const response = await axios.get(`/api/posts/${id}`);
+            setPost(response.data);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchPost = async () => {
-            try {
-                const response = await axios.get(`/api/posts/${id}`);
-                setPost(response.data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
         fetchPost();
     }, [id]);
+
+    const handleUpload = async (event) => {
+        event.preventDefault();
+        const files = event.target.files;
+        if (!files || files.length === 0) {
+            console.error('No file selected');
+            return;
+        }
+        const file = files[0];
+        const formData = new FormData();
+        formData.append('postPicture', file);
+        try {
+            await axios.post(`/api/posts/${id}/upload-post`, formData, {
+                headers: {
+                    Authorization: localStorage.getItem('token'),
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            // Refresh profile after upload
+            fetchPost(); // Fetch updated profile data
+        } catch (error) {
+            console.error('Error uploading postPicture:', error);
+        }
+    };
 
     const fetchComments = async () => {
         try {
@@ -105,8 +132,30 @@ export default function SingleBlog() {
             <h1>Single Blog</h1>
             {post && (
                 <>
-                    <h2> Title:{post.title}</h2>
-                    <p> Content:{post.content}</p>
+                    <h2>Title: {post.title}</h2>
+                    <p>Content: {post.content}</p>
+                </>
+            )}
+            {loading ? (
+                <p>Loading...</p>
+            ) : (
+                <>
+                    {post ? (
+                        <>
+                            <h4>Post:</h4>
+                            <img 
+                                src={`http://localhost:5000/${post.postPicture}`} // Assuming the postPicture field contains the correct path
+                                alt="post" 
+                                style={{ width: '150px', height: '150px', objectFit: 'cover' }} 
+                            />
+                        </>
+                    ) : (
+                        <div>
+                            <h4>No post found.</h4>
+                            <h4>Please upload your post picture:</h4>
+                            <input type="file" name="postPicture" accept="image/*" onChange={handleUpload} />
+                        </div>
+                    )}
                 </>
             )}
 
@@ -117,7 +166,7 @@ export default function SingleBlog() {
                     onChange={(e) => setCommentText(e.target.value)}
                     placeholder="Write your comment here"
                 ></textarea> <br/>
-                 { localStorage.getItem('token') ? <button onClick={handleCommentSubmit}>comment</button>  : <h2>Sign in to comment</h2> }
+                {localStorage.getItem('token') ? <button onClick={handleCommentSubmit}>Comment</button> : <h2>Sign in to comment</h2>}
             </form>
 
             <ul>
@@ -131,8 +180,8 @@ export default function SingleBlog() {
                                     value={editCommentText}
                                     onChange={(e) => setEditCommentText(e.target.value)}
                                     placeholder="Edit your comment"
-                                ></textarea>  <br />
-                                 { localStorage.getItem('token') ? <button onClick={handleEditCommentSubmit}>submit</button>  : <h2>Sign in to  Edit comment</h2> }
+                                ></textarea> <br />
+                                {localStorage.getItem('token') ? <button onClick={handleEditCommentSubmit}>Submit</button> : <h2>Sign in to edit comment</h2>}
                             </form>
                         ) : (
                             <>
@@ -150,11 +199,10 @@ export default function SingleBlog() {
             {deleteConfirmationOpen && (
                 <div>
                     <p>Are you sure you want to delete this comment?</p>
-                    { localStorage.getItem('token') ? <button onClick={handleDeleteComment}>submit</button>  : <h2>Sign in to delete</h2> }
+                    {localStorage.getItem('token') ? <button onClick={handleDeleteComment}>Submit</button> : <h2>Sign in to delete</h2>}
                     <button onClick={handleDeleteConfirmationClose}>Cancel</button>
                 </div>
             )}
-
-               
-            </div>
-    )}
+        </div>
+    );
+}

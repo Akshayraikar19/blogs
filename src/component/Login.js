@@ -27,7 +27,7 @@ export default function Login ({loggedIn}){
             try{
                 const response=await axios.post("/api/users/login",values)
                 localStorage.setItem("token",response.data.token)
-               loggedIn()
+                loggedIn()
                  console.log(response.data)
                 const userResponse=await axios.get("/api/users/profile",{
                     headers:{

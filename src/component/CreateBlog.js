@@ -4,7 +4,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useNavigate } from "react-router-dom";
 
-export default function PostForm() {
+export default function PostForm({blogCreated}) {
     const [postForm, setPostForm] = useState({
         title: '',
         content: '',
@@ -37,7 +37,8 @@ export default function PostForm() {
                 featuredImage: ''
             });
             alert('Post is created')
-            navigate('/list7-blogs');
+            blogCreated()
+            navigate('/list-blogs');
         } catch (error) {
             console.log(error);
             alert('Failed to create post');
